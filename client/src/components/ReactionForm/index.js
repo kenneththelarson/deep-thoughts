@@ -1,35 +1,15 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/react-hooks';
-import { ADD_THOUGHT } from '../../utils/mutations';
-import { QUERY_THOUGHTS, QUERY_ME } from '../../utils/queries';
+import { ADD_REACTION } from '../../utils/mutations';
 
-const ThoughtForm = () => {
-    const [thoughtText, setText] = useState('');
+const ReactionForm = ({ thoughtId }) => {
+    const [reactionBody, setBody] = useState('');
     const [characterCount, setCharacterCount] = useState(0);
-
-    const [addThought, { error }] = useMutation(ADD_THOUGHT, {
-        update(cache, { data: { addThought } }) {
-            try {
-                const { thoughts } = cache.readQuery({ query: QUERY_THOUGHTS });
-                cache.writeQuery({
-                    query: QUERY_THOUGHTS,
-                    data: { thoughts: [addThought, ...thoughts] }
-                });
-            } catch (e) {
-                console.error(e);
-            }
-
-            const { me } = cache.readQuery({ query: QUERY_ME });
-            cache.writeQuery({
-                query: QUERY_ME,
-                data: { me: { ...me, thoughts: [...me.thoughts, addThought] } }
-            });
-        }
-    });
+    const [addReaction, { error }] = useMutation(ADD_REACTION);
 
     const handleChange = event => {
         if (event.target.value.length <= 280) {
-            setText(event.target.value);
+            setBody(event.target.value);
             setCharacterCount(event.target.value.length);
         }
     };
@@ -38,10 +18,10 @@ const ThoughtForm = () => {
         event.preventDefault();
 
         try {
-            await addThought({
-                variables: { thoughtText }
+            await addReaction({
+                variables: { reactionBody, thoughtId }
             });
-            setText('');
+            setBody('');
             setCharacterCount(0);
         } catch (e) {
             console.error(e);
@@ -59,8 +39,8 @@ const ThoughtForm = () => {
                 onSubmit={handleFormSubmit}
             >
                 <textarea
-                    placeholder="Here's a new thought..."
-                    value={thoughtText}
+                    placeholder="Leave a reaction to this thought..."
+                    value={reactionBody}
                     className="form-input col-12 col-md-9"
                     onChange={handleChange}
                 ></textarea>
@@ -72,4 +52,4 @@ const ThoughtForm = () => {
     );
 };
 
-export default ThoughtForm;
+export default ReactionForm;
